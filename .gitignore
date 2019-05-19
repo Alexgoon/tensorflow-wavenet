@@ -1,4 +1,5 @@
-logdir/
+logdir/generate
+logdir/train
 VCTK-Corpus/
 *.pyc
 

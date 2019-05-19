@@ -4,6 +4,7 @@ This script trains a network with the WaveNet using data from the VCTK corpus,
 which can be freely downloaded at the following site (~10 GB):
 http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html
 """
+# tensorboard --logdir=logdir\train\2019-02-08T18-04-10\ --host=127.0.0.1
 
 from __future__ import print_function
 
@@ -14,8 +15,10 @@ import os
 import sys
 import time
 
+
 import tensorflow as tf
 from tensorflow.python.client import timeline
+from tensorflow.python import debug as tf_debug
 
 from wavenet import WaveNetModel, AudioReader, optimizer_factory
 
@@ -29,7 +32,7 @@ WAVENET_PARAMS = './wavenet_params.json'
 STARTED_DATESTRING = "{0:%Y-%m-%dT%H-%M-%S}".format(datetime.now())
 SAMPLE_SIZE = 100000
 L2_REGULARIZATION_STRENGTH = 0
-SILENCE_THRESHOLD = 0.3
+SILENCE_THRESHOLD = 0.0
 EPSILON = 0.001
 MOMENTUM = 0.9
 MAX_TO_KEEP = 5
@@ -266,9 +269,26 @@ def main():
     summaries = tf.summary.merge_all()
 
     # Set up session
+
+
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=False))
+
     init = tf.global_variables_initializer()
     sess.run(init)
+    #sess = tf_debug.LocalCLIDebugWrapperSession(sess, thread_name_filter="MainThread$", dump_root="C:\\MProjects\\WaveNet\\tensorflow-wavenet-master\\debugDump")
+
+
+    # run --node_name_filter wavenet_1/loss/Reshape_1:0 -- (36352, 256)
+    # run --node_name_filter (.*loss.*)|(.*encode.*)
+    # pt -a tensorName > C:/Users/russkov.alexander/Desktop/WaveNet/tensorflow-wavenet-master/myDebugInfo/file.txt
+    #encoded_input = Tensor("wavenet_1/encode/ToInt32:0", shape=(1, ?, 1), dtype=int32)  -- (1, 59901, 1)
+    #encoded = Tensor("wavenet_1/one_hot_encode/Reshape:0", shape=(1, ?, 256), dtype=float32) -- (1, 59901, 256)
+
+
+    #https: // www.tensorflow.org / guide / debugger  # frequently_asked_questions
+    #Q: The model I am debugging is very large. The data dumped by tfdbg fills up the free space of my disk. What can I do?
+    #https: // github.com / tensorflow / tensorflow / issues / 8753
+    #sess = tf_debug.TensorBoardDebugWrapperSession(sess, "RUSSKOV-NB-W10:6064", send_traceback_and_source_code=False)
 
     # Saver for storing checkpoints of the model.
     saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=args.max_checkpoints)

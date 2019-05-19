@@ -647,12 +647,18 @@ class WaveNetModel(object):
             with tf.name_scope('loss'):
                 # Cut off the samples corresponding to the receptive field
                 # for the first predicted sample.
+                # target_output = tf.slice(
+                #     tf.reshape(
+                #         encoded,
+                #         [self.batch_size, -1, self.quantization_channels]),
+                #     [0, self.receptive_field, 0],
+                #     [-1, -1, -1])
                 target_output = tf.slice(
                     tf.reshape(
                         encoded,
                         [self.batch_size, -1, self.quantization_channels]),
-                    [0, self.receptive_field, 0],
-                    [-1, -1, -1])
+                    [0, self.receptive_field - 1, 0],
+                    [-1,  tf.shape(encoded)[1] - self.receptive_field, -1])
                 target_output = tf.reshape(target_output,
                                            [-1, self.quantization_channels])
                 prediction = tf.reshape(raw_output,
